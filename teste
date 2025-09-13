@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsMass - Disparador em Massa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary: #25D366;
+            --primary-dark: #128C7E;
+            --light-bg: #f0f2f5;
+        }
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .sidebar {
+            background-color: #fff;
+            min-height: 100vh;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding-top: 20px;
+            position: fixed;
+            width: 250px;
+            z-index: 100;
+        }
+        .sidebar .nav-link {
+            color: #444;
+            padding: 12px 20px;
+            margin: 4px 15px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: rgba(37, 211, 102, 0.1);
+            color: var(--primary-dark);
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 24px;
+            text-align: center;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            padding-top: 20px;
+        }
+        .navbar {
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: none;
+            margin-bottom: 24px;
+        }
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-weight: 600;
+            padding: 16px 20px;
+            border-radius: 12px 12px 0 0 !important;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+        }
+        .stat-card i {
+            font-size: 24px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        .stat-card h3 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        .stat-card p {
+            color: #666;
+            margin: 0;
+        }
+        .connection-status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .connected {
+            background-color: var(--primary);
+        }
+        .disconnected {
+            background-color: #dc3545;
+        }
+        .connecting {
+            background-color: #ffc107;
+        }
+        .qr-code-container {
+            text-align: center;
+            padding: 20px;
+        }
+        .connection-steps {
+            margin-top: 20px;
+        }
+        .step {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
+        .step-number {
+            background-color: var(--primary);
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .whatsapp-icon {
+            color: var(--primary);
+            font-size: 24px;
+        }
+        .contact-item, .message-item {
+            border-bottom: 1px solid #eee;
+            padding: 12px 15px;
+            transition: background-color 0.2s;
+        }
+        .contact-item:hover, .message-item:hover {
+            background-color: #f9f9f9;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        #qrcode canvas {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar d-md-block">
+        <div class="text-center mb-4">
+            <h4 class="whatsapp-icon"><i class="fab fa-whatsapp"></i> WhatsMass</h4>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showTab('dashboard')">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showTab('contacts')">
+                    <i class="fas fa-address-book"></i> Contatos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showTab('messages')">
+                    <i class="fas fa-comment"></i> Mensagens
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showTab('campaigns')">
+                    <i class="fas fa-paper-plane"></i> Campanhas
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="#" onclick="showTab('settings')">
+                    <i class="fas fa-cog"></i> Configurações
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container-fluid">
+            <h2 class="navbar-brand mb-0">WhatsMass</h2>
+            <ul class="navbar-nav ms-auto flex-row">
+                <li class="nav-item me-3">
+                    <span class="nav-link" id="connection-status-text">
+                        <span class="connection-status disconnected" id="connection-status"></span>
+                        <span id="status-text">Desconectado</span>
+                    </span>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle"></i> Admin
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#">Perfil</a></li>
+                        <li><a class="dropdown-item" href="#">Sair</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Tab -->
+        <div class="tab-content active" id="dashboard">
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 class="mb-4">Dashboard</h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <i class="fas fa-users"></i>
+                        <h3 id="total-contacts">0</h3>
+                        <p>Total de Contatos</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <i class="fas fa-comment"></i>
+                        <h3 id="total-messages">0</h3>
+                        <p>Mensagens Enviadas</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <i class="fas fa-paper-plane"></i>
+                        <h3 id="total-campaigns">0</h3>
+                        <p>Campanhas Realizadas</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <i class="fas fa-chart-bar"></i>
+                        <h3 id="delivery-rate">98%</h3>
+                        <p>Taxa de Entrega</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Últimas Campanhas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Data</th>
+                                            <th>Contatos</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="campaigns-table">
+                                        <tr>
+                                            <td colspan="4" class="text-center">Nenhuma campanha realizada</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Próximo Disparo</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4 id="next-campaign-name">Nenhuma campanha agendada</h4>
+                            </div>
+                            <div id="next-campaign-details">
+                                <p class="text-muted">Não há disparos programados no momento.</p>
+                            </div>
+                            <button class="btn btn-primary w-100 mt-3" onclick="showTab('campaigns')">
+                                <i class="fas fa-plus"></i> Nova Campanha
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contacts Tab -->
+        <div class="tab-content" id="contacts">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>Gerenciar Contatos</h2>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addContactModal">
+                            <i class="fas fa-plus"></i> Adicionar Contato
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Lista de Contatos</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Telefone</th>
+                                            <th>Grupo</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="contacts-table">
+                                        <tr>
+                                            <td colspan="4" class="text-center">Nenhum contato cadastrado</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Tab -->
+        <div class="tab-content" id="messages">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>Modelos de Mensagem</h2>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMessageModal">
+                            <i class="fas fa-plus"></i> Nova Mensagem
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Mensagens Salvas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Conteúdo</th>
+                                            <th>Data de Criação</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="messages-table">
+                                        <tr>
+                                            <td colspan="4" class="text-center">Nenhuma mensagem cadastrada</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campaigns Tab -->
+        <div class="tab-content" id="campaigns">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>Campanhas de Disparo</h2>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
+                            <i class="fas fa-plus"></i> Nova Campanha
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Campanhas Criadas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Mensagem</th>
+                                            <th>Contatos</th>
+                                            <th>Status</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="campaigns-list-table">
+                                        <tr>
+                                            <td colspan="5" class="text-center">Nenhuma campanha criada</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div class="tab-content" id="settings">
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 class="mb-4">Configurações</h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Configurações de Disparo</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="interval" class="form-label">Intervalo entre mensagens (segundos)</label>
+                                <input type="number" class="form-control" id="interval" value="5" min="5">
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="confirmBeforeSending" checked>
+                                <label class="form-check-label" for="confirmBeforeSending">Solicitar confirmação antes de enviar</label>
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSettings()">
+                                <i class="fas fa-save"></i> Salvar Configurações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Conexão com WhatsApp</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Para conectar com o WhatsApp, escaneie o QR Code abaixo usando o aplicativo do WhatsApp no seu celular.
+                            </div>
+                            
+                            <div class="qr-code-container">
+                                <div id="qrcode"></div>
+                                <p class="mt-3">Escaneie este código com o WhatsApp<br>para conectar sua conta</p>
+                            </div>
+                            
+                            <div class="connection-steps">
+                                <div class="step">
+                                    <div class="step-number">1</div>
+                                    <div>Abra o WhatsApp no seu celular</div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">2</div>
+                                    <div>Toque em <strong>Menu</strong> ou <strong>Configurações</strong> e selecione <strong>Dispositivos conectados</strong></div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">3</div>
+                                    <div>Toque em <strong>Conectar um dispositivo</strong></div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">4</div>
+                                    <div>Aponte a câmera para o código QR acima</div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-4">
+                                <button class="btn btn-success" id="connectButton" onclick="initiateConnection()">
+                                    <i class="fab fa-whatsapp"></i> Gerar Novo QR Code
+                                </button>
+                                <button class="btn btn-danger" id="disconnectButton" style="display: none;" onclick="disconnectWhatsApp()">
+                                    <i class="fas fa-times"></i> Desconectar
+                                </button>
+                            </div>
+                            
+                            <div class="mt-3" id="connectionHelp">
+                                <div class="alert alert-warning">
+                                    <h6><i class="fas fa-exclamation-triangle"></i> Importante:</h6>
+                                    <ul class="mb-0">
+                                        <li>Use um número secundário para testes</li>
+                                        <li>Mantenha o WhatsApp Web aberto no celular</li>
+                                        <li>Evite enviar mensagens em massa para números desconhecidos</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Contact Modal -->
+    <div class="modal fade" id="addContactModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Adicionar Contato</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addContactForm">
+                        <div class="mb-3">
+                            <label for="contactName" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="contactName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contactPhone" class="form-label">Telefone (com DDD)</label>
+                            <input type="text" class="form-control" id="contactPhone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contactGroup" class="form-label">Grupo</label>
+                            <select class="form-select" id="contactGroup">
+                                <option value="">Selecionar grupo</option>
+                                <option value="Clientes">Clientes</option>
+                                <option value="Fornecedores">Fornecedores</option>
+                                <option value="Amigos">Amigos</option>
+                                <option value="Família">Família</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveContactBtn">Salvar Contato</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Message Modal -->
+    <div class="modal fade" id="addMessageModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Criar Modelo de Mensagem</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addMessageForm">
+                        <div class="mb-3">
+                            <label for="messageName" class="form-label">Nome do Modelo</label>
+                            <input type="text" class="form-control" id="messageName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="messageContent" class="form-label">Conteúdo da Mensagem</label>
+                            <textarea class="form-control" id="messageContent" rows="5" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Variáveis Disponíveis</label>
+                            <div>
+                                <span class="badge bg-light text-dark me-2" onclick="addVariable('{nome}')">{nome}</span>
+                                <span class="badge bg-light text-dark me-2" onclick="addVariable('{empresa}')">{empresa}</span>
+                                <span class="badge bg-light text-dark me-2" onclick="addVariable('{data}')">{data}</span>
+                                <span class="badge bg-light text-dark me-2" onclick="addVariable('{telefone}')">{telefone}</span>
+                            </div>
+                            <small class="text-muted">Clique em uma variável para inserir na mensagem</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveMessageBtn">Salvar Mensagem</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Campaign Modal -->
+    <div class="modal fade" id="createCampaignModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Criar Nova Campanha</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createCampaignForm">
+                        <div class="mb-3">
+                            <label for="campaignName" class="form-label">Nome da Campanha</label>
+                            <input type="text" class="form-control" id="campaignName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="campaignMessage" class="form-label">Mensagem</label>
+                            <select class="form-select" id="campaignMessage" required>
+                                <option value="">Selecionar mensagem</option>
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contatos</label>
+                            <div class="border p-3" style="max-height: 200px; overflow-y: auto;">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="selectAllContacts">
+                                    <label class="form-check-label" for="selectAllContacts">Selecionar todos os contatos</label>
+                                </div>
+                                <div id="contactsChecklist">
+                                    <!-- Contacts will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="campaignInterval" class="form-label">Intervalo entre mensagens (segundos)</label>
+                            <input type="number" class="form-control" id="campaignInterval" value="5" min="5" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="startCampaignBtn">Iniciar Campanha</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Banco de dados simulado
+        let database = {
+            contacts: JSON.parse(localStorage.getItem('contacts')) || [],
+            messages: JSON.parse(localStorage.getItem('messages')) || [],
+            campaigns: JSON.parse(localStorage.getItem('campaigns')) || [],
+            settings: JSON.parse(localStorage.getItem('settings')) || { 
+                interval: 5,
+                confirmBeforeSending: true
+            },
+            whatsappConnected: JSON.parse(localStorage.getItem('whatsappConnected')) || false
+        };
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
+            updateStats();
+            renderContactsTable();
+            renderMessagesTable();
+            renderCampaignsTable();
+            populateCampaignModal();
+            updateConnectionStatus();
+            
+            // Iniciar a geração do QR Code automaticamente
+            initiateConnection();
+        });
+
+        // Mostrar aba específica
+        function showTab(tabId) {
+            // Esconder todas as abas
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar a aba selecionada
+            document.getElementById(tabId).classList.add('active');
+            
+            // Atualizar menu lateral
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Ativar o link correspondente no menu
+            const activeLink = document.querySelector(`.sidebar .nav-link[href="#"][onclick="showTab('${tabId}')"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        }
+
+        // Inicializar a aplicação
+        function initApp() {
+            // Adicionar alguns dados de exemplo se estiver vazio
+            if (database.contacts.length === 0) {
+                database.contacts = [
+                    { id: 1, name: "João Silva", phone: "5511999999999", group: "Clientes" },
+                    { id: 2, name: "Maria Santos", phone: "5511888888888", group: "Clientes" },
+                    { id: 3, name: "Pedro Alves", phone: "5511777777777", group: "Fornecedores" }
+                ];
+                saveToLocalStorage('contacts', database.contacts);
+            }
+
+            if (database.messages.length === 0) {
+                database.messages = [
+                    { id: 1, name: "Promoção de Verão", content: "Olá {nome}! Temos promoções especiais de verão para você. Aproveite!" },
+                    { id: 2, name: "Reunião Importante", content: "Prezado {nome}, gostaríamos de marcar uma reunião para discutir {assunto}. Poderia ser na {data}?" }
+                ];
+                saveToLocalStorage('messages', database.messages);
+            }
+
+            // Event Listeners
+            document.getElementById('saveContactBtn').addEventListener('click', saveContact);
+            document.getElementById('saveMessageBtn').addEventListener('click', saveMessage);
+            document.getElementById('startCampaignBtn').addEventListener('click', startCampaign);
+            document.getElementById('selectAllContacts').addEventListener('change', toggleAllContacts);
+        }
+
+        // Atualizar estatísticas no dashboard
+        function updateStats() {
+            document.getElementById('total-contacts').textContent = database.contacts.length;
+            document.getElementById('total-messages').textContent = database.campaigns.reduce((total, campaign) => total + campaign.contacts.length, 0);
+            document.getElementById('total-campaigns').textContent = database.campaigns.length;
+            
+            // Atualizar tabela de campanhas no dashboard
+            const campaignsTable = document.getElementById('campaigns-table');
+            campaignsTable.innerHTML = '';
+            
+            if (database.campaigns.length === 0) {
+                campaignsTable.innerHTML = '<tr><td colspan="4" class="text-center">Nenhuma campanha realizada</td></tr>';
+            } else {
+                const recentCampaigns = database.campaigns.slice(-3).reverse();
+                recentCampaigns.forEach(campaign => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${campaign.name}</td>
+                        <td>${new Date(campaign.date).toLocaleDateString()}</td>
+                        <td>${campaign.contacts.length}</td>
+                        <td><span class="badge bg-success">Concluída</span></td>
+                    `;
+                    campaignsTable.appendChild(row);
+                });
+            }
+        }
+
+        // Renderizar tabela de contatos
+        function renderContactsTable() {
+            const contactsTable = document.getElementById('contacts-table');
+            contactsTable.innerHTML = '';
+            
+            if (database.contacts.length === 0) {
+                contactsTable.innerHTML = '<tr><td colspan="4" class="text-center">Nenhum contato cadastrado</td></tr>';
+                return;
+            }
+            
+            database.contacts.forEach(contact => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${contact.name}</td>
+                    <td>${contact.phone}</td>
+                    <td>${contact.group || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editContact(${contact.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteContact(${contact.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                contactsTable.appendChild(row);
+            });
+        }
+
+        // Renderizar tabela de mensagens
+        function renderMessagesTable() {
+            const messagesTable = document.getElementById('messages-table');
+            messagesTable.innerHTML = '';
+            
+            if (database.messages.length === 0) {
+                messagesTable.innerHTML = '<tr><td colspan="4" class="text-center">Nenhuma mensagem cadastrada</td></tr>';
+                return;
+            }
+            
+            database.messages.forEach(message => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${message.name}</td>
+                    <td>${message.content.length > 50 ? message.content.substring(0, 50) + '...' : message.content}</td>
+                    <td>${new Date().toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editMessage(${message.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteMessage(${message.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                messagesTable.appendChild(row);
+            });
+        }
+
+        // Renderizar tabela de campanhas
+        function renderCampaignsTable() {
+            const campaignsTable = document.getElementById('campaigns-list-table');
+            campaignsTable.innerHTML = '';
+            
+            if (database.campaigns.length === 0) {
+                campaignsTable.innerHTML = '<tr><td colspan="5" class="text-center">Nenhuma campanha criada</td></tr>';
+                return;
+            }
+            
+            database.campaigns.forEach(campaign => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${campaign.name}</td>
+                    <td>${campaign.message.length > 30 ? campaign.message.substring(0, 30) + '...' : campaign.message}</td>
+                    <td>${campaign.contacts.length}</td>
+                    <td><span class="badge bg-success">Concluída</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewCampaign(${campaign.id})">
+                            <i class="fas fa-eye"></i> Detalhes
+                        </button>
+                    </td>
+                `;
+                campaignsTable.appendChild(row);
+            });
+        }
+
+        // Popular modal de campanha com contatos e mensagens
+        function populateCampaignModal() {
+            // Popular seleção de mensagens
+            const messageSelect = document.getElementById('campaignMessage');
+            messageSelect.innerHTML = '<option value="">Selecionar mensagem</option>';
+            database.messages.forEach(message => {
+                const option = document.createElement('option');
+                option.value = message.id;
+                option.textContent = message.name;
+                messageSelect.appendChild(option);
+            });
+            
+            // Popular lista de contatos
+            const contactsChecklist = document.getElementById('contactsChecklist');
+            contactsChecklist.innerHTML = '';
+            
+            if (database.contacts.length === 0) {
+                contactsChecklist.innerHTML = '<div class="text-center py-3">Nenhum contato cadastrado</div>';
+                return;
+            }
+            
+            database.contacts.forEach(contact => {
+                const div = document.createElement('div');
+                div.className = 'form-check';
+                div.innerHTML = `
+                    <input class="form-check-input contact-checkbox" type="checkbox" value="${contact.id}" id="contact-${contact.id}">
+                    <label class="form-check-label" for="contact-${contact.id}">${contact.name} (${contact.phone})</label>
+                `;
+                contactsChecklist.appendChild(div);
+            });
+        }
+
+        // Salvar contato
+        function saveContact() {
+            const name = document.getElementById('contactName').value;
+            const phone = document.getElementById('contactPhone').value;
+            const group = document.getElementById('contactGroup').value;
+            
+            if (!name || !phone) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+            
+            const newContact = {
+                id: database.contacts.length > 0 ? Math.max(...database.contacts.map(c => c.id)) + 1 : 1,
+                name,
+                phone,
+                group
+            };
+            
+            database.contacts.push(newContact);
+            saveToLocalStorage('contacts', database.contacts);
+            
+            // Fechar modal e atualizar tabela
+            bootstrap.Modal.getInstance(document.getElementById('addContactModal')).hide();
+            renderContactsTable();
+            updateStats();
+            populateCampaignModal();
+            
+            // Limpar formulário
+            document.getElementById('addContactForm').reset();
+        }
+
+        // Salvar mensagem
+        function saveMessage() {
+            const name = document.getElementById('messageName').value;
+            const content = document.getElementById('messageContent').value;
+            
+            if (!name || !content) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+            
+            const newMessage = {
+                id: database.messages.length > 0 ? Math.max(...database.messages.map(m => m.id)) + 1 : 1,
+                name,
+                content
+            };
+            
+            database.messages.push(newMessage);
+            saveToLocalStorage('messages', database.messages);
+            
+            // Fechar modal e atualizar tabela
+            bootstrap.Modal.getInstance(document.getElementById('addMessageModal')).hide();
+            renderMessagesTable();
+            populateCampaignModal();
+            
+            // Limpar formulário
+            document.getElementById('addMessageForm').reset();
+        }
+
+        // Iniciar campanha
+        function startCampaign() {
+            if (!database.whatsappConnected) {
+                alert('Por favor, conecte-se ao WhatsApp primeiro na aba Configurações.');
+                return;
+            }
+            
+            const name = document.getElementById('campaignName').value;
+            const messageId = document.getElementById('campaignMessage').value;
+            const interval = document.getElementById('campaignInterval').value;
+            
+            if (!name || !messageId) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+            
+            // Obter contatos selecionados
+            const selectedContacts = [];
+            document.querySelectorAll('.contact-checkbox:checked').forEach(checkbox => {
+                const contactId = parseInt(checkbox.value);
+                const contact = database.contacts.find(c => c.id === contactId);
+                if (contact) selectedContacts.push(contact);
+            });
+            
+            if (selectedContacts.length === 0) {
+                alert('Por favor, selecione pelo menos um contato.');
+                return;
+            }
+            
+            // Obter mensagem selecionada
+            const message = database.messages.find(m => m.id === parseInt(messageId));
+            
+            const newCampaign = {
+                id: database.campaigns.length > 0 ? Math.max(...database.campaigns.map(c => c.id)) + 1 : 1,
+                name,
+                message: message.content,
+                contacts: selectedContacts,
+                date: new Date().toISOString(),
+                interval: parseInt(interval)
+            };
+            
+            database.campaigns.push(newCampaign);
+            saveToLocalStorage('campaigns', database.campaigns);
+            
+            // Fechar modal
+            bootstrap.Modal.getInstance(document.getElementById('createCampaignModal')).hide();
+            
+            // Iniciar simulação de disparo
+            simulateMessageSending(newCampaign);
+            
+            // Atualizar tabelas
+            renderCampaignsTable();
+            updateStats();
+            
+            // Limpar formulário
+            document.getElementById('createCampaignForm').reset();
+        }
+
+        // Simular envio de mensagens
+        function simulateMessageSending(campaign) {
+            let index = 0;
+            const total = campaign.contacts.length;
+            
+            // Criar modal de progresso
+            const progressModal = `
+                <div class="modal fade" id="progressModal" tabindex="-1" data-bs-backdrop="static">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Enviando Mensagens: ${campaign.name}</h5>
+                            </div>
+                            <div class="modal-body">
+                                <p>Enviando mensagem para: <span id="current-contact">${campaign.contacts[0].name}</span></p>
+                                <div class="progress">
+                                    <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <p class="mt-2"><span id="progress-text">0</span> de <span>${total}</span> mensagens enviadas</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Adicionar modal ao documento se não existir
+            if (!document.getElementById('progressModal')) {
+                document.body.insertAdjacentHTML('beforeend', progressModal);
+            }
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('progressModal'));
+            modal.show();
+            
+            // Função para enviar próxima mensagem
+            function sendNextMessage() {
+                if (index < total) {
+                    const contact = campaign.contacts[index];
+                    const progressBar = document.getElementById('progress-bar');
+                    const progressText = document.getElementById('progress-text');
+                    const currentContact = document.getElementById('current-contact');
+                    
+                    // Atualizar UI
+                    currentContact.textContent = contact.name;
+                    const progress = Math.round((index / total) * 100);
+                    progressBar.style.width = `${progress}%`;
+                    progressBar.setAttribute('aria-valuenow', progress);
+                    progressText.textContent = index;
+                    
+                    // Simular envio (em um sistema real, aqui seria a integração com a API do WhatsApp)
+                    setTimeout(() => {
+                        index++;
+                        sendNextMessage();
+                    }, campaign.interval * 1000);
+                } else {
+                    // Finalizar
+                    document.getElementById('progress-bar').style.width = '100%';
+                    document.getElementById('progress-text').textContent = total;
+                    document.getElementById('current-contact').textContent = 'Concluído!';
+                    
+                    setTimeout(() => {
+                        bootstrap.Modal.getInstance(document.getElementById('progressModal')).hide();
+                        alert(`Campanha "${campaign.name}" concluída! ${total} mensagens enviadas.`);
+                    }, 1000);
+                }
+            }
+            
+            // Iniciar processo
+            sendNextMessage();
+        }
+
+        // Selecionar/Desselecionar todos os contatos
+        function toggleAllContacts() {
+            const selectAll = document.getElementById('selectAllContacts').checked;
+            document.querySelectorAll('.contact-checkbox').forEach(checkbox => {
+                checkbox.checked = selectAll;
+            });
+        }
+
+        // Adicionar variável ao conteúdo da mensagem
+        function addVariable(variable) {
+            const textarea = document.getElementById('messageContent');
+            const startPos = textarea.selectionStart;
+            const endPos = textarea.selectionEnd;
+            
+            textarea.value = textarea.value.substring(0, startPos) + variable + textarea.value.substring(endPos);
+            textarea.focus();
+            textarea.selectionStart = startPos + variable.length;
+            textarea.selectionEnd = startPos + variable.length;
+        }
+
+        // Iniciar conexão com WhatsApp
+        function initiateConnection() {
+            setConnectionStatus('connecting', 'Conectando...');
+            
+            // Gerar QR Code
+            generateQRCode();
+            
+            // Simular processo de conexão
+            simulateConnection();
+        }
+
+        // Gerar QR Code
+        function generateQRCode() {
+            const qrcodeElement = document.getElementById('qrcode');
+            qrcodeElement.innerHTML = '';
+            
+            // Gerar um código único para a sessão
+            const sessionId = 'whatsapp-session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            
+            // Gerar QR Code
+            try {
+                QRCode.toCanvas(qrcodeElement, sessionId, {
+                    width: 200,
+                    margin: 1,
+                    color: {
+                        dark: '#25D366',
+                        light: '#ffffff'
+                    }
+                }, function(error) {
+                    if (error) {
+                        console.error('Erro ao gerar QR Code:', error);
+                        qrcodeElement.innerHTML = '<div class="alert alert-danger">Erro ao gerar QR Code. <button onclick="initiateConnection()" class="btn btn-sm btn-primary">Tentar novamente</button></div>';
+                    }
+                });
+            } catch (error) {
+                console.error('Erro ao gerar QR Code:', error);
+                qrcodeElement.innerHTML = '<div class="alert alert-danger">Erro ao gerar QR Code. <button onclick="initiateConnection()" class="btn btn-sm btn-primary">Tentar novamente</button></div>';
+            }
+        }
+
+        // Simular processo de conexão
+        function simulateConnection() {
+            // Simular tempo de espera para escanear o QR Code
+            setTimeout(() => {
+                // 80% de chance de sucesso na simulação
+                if (Math.random() > 0.2) {
+                    database.whatsappConnected = true;
+                    localStorage.setItem('whatsappConnected', JSON.stringify(database.whatsappConnected));
+                    
+                    setConnectionStatus('connected', 'Conectado');
+                    document.getElementById('connectButton').style.display = 'none';
+                    document.getElementById('disconnectButton').style.display = 'block';
+                    
+                    alert('Conexão com WhatsApp estabelecida com sucesso!');
+                } else {
+                    setConnectionStatus('disconnected', 'Falha na conexão');
+                    alert('Falha na conexão. Por favor, tente novamente.');
+                }
+            }, 5000);
+        }
+
+        // Desconectar WhatsApp
+        function disconnectWhatsApp() {
+            database.whatsappConnected = false;
+            localStorage.setItem('whatsappConnected', JSON.stringify(database.whatsappConnected));
+            
+            setConnectionStatus('disconnected', 'Desconectado');
+            document.getElementById('connectButton').style.display = 'block';
+            document.getElementById('disconnectButton').style.display = 'none';
+            
+            alert('Desconectado do WhatsApp com sucesso.');
+        }
+
+        // Atualizar status de conexão
+        function updateConnectionStatus() {
+            if (database.whatsappConnected) {
+                setConnectionStatus('connected', 'Conectado');
+                document.getElementById('connectButton').style.display = 'none';
+                document.getElementById('disconnectButton').style.display = 'block';
+            } else {
+                setConnectionStatus('disconnected', 'Desconectado');
+                document.getElementById('connectButton').style.display = 'block';
+                document.getElementById('disconnectButton').style.display = 'none';
+            }
+        }
+
+        // Definir status de conexão
+        function setConnectionStatus(status, text) {
+            const statusElement = document.getElementById('connection-status');
+            const textElement = document.getElementById('status-text');
+            
+            statusElement.className = 'connection-status ' + status;
+            textElement.textContent = text;
+        }
+
+        // Salvar configurações
+        function saveSettings() {
+            const interval = document.getElementById('interval').value;
+            const confirmBeforeSending = document.getElementById('confirmBeforeSending').checked;
+            
+            database.settings.interval = parseInt(interval);
+            database.settings.confirmBeforeSending = confirmBeforeSending;
+            
+            localStorage.setItem('settings', JSON.stringify(database.settings));
+            
+            alert('Configurações salvas com sucesso!');
+        }
+
+        // Funções auxiliares
+        function saveToLocalStorage(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        function editContact(id) {
+            alert(`Editar contato ${id} - Funcionalidade em desenvolvimento`);
+        }
+
+        function deleteContact(id) {
+            if (confirm('Tem certeza que deseja excluir este contato?')) {
+                database.contacts = database.contacts.filter(contact => contact.id !== id);
+                saveToLocalStorage('contacts', database.contacts);
+                renderContactsTable();
+                updateStats();
+                populateCampaignModal();
+            }
+        }
+
+        function editMessage(id) {
+            alert(`Editar mensagem ${id} - Funcionalidade em desenvolvimento`);
+        }
+
+        function deleteMessage(id) {
+            if (confirm('Tem certeza que deseja excluir esta mensagem?')) {
+                database.messages = database.messages.filter(message => message.id !== id);
+                saveToLocalStorage('messages', database.messages);
+                renderMessagesTable();
+                populateCampaignModal();
+            }
+        }
+
+        function viewCampaign(id) {
+            alert(`Visualizar campanha ${id} - Funcionalidade em desenvolvimento`);
+        }
+    </script>
+</body>
+</html>
